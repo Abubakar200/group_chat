@@ -3,7 +3,6 @@
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
@@ -12,10 +11,43 @@ import { useModal } from "@/hooks/use-modal-store";
 import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { Copy, RefreshCw } from "lucide-react";
+import { Check, Copy, RefreshCw } from "lucide-react";
+import { useOrigin } from "@/hooks/use-origin";
+import { useState } from "react";
+import axios from "axios";
 
 const InviteModal = () => {
-  const { isOpen, onClose, type } = useModal();
+  const { isOpen, onOpen, onClose, type, data } = useModal();
+  const { server } = data;
+
+  const origin = useOrigin();
+  const inviteUrl = `${origin}/invite/${server?.inviteCode}`;
+
+  const [copied, setCopied] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const onCopy = () => {
+    navigator.clipboard.writeText(inviteUrl);
+    setCopied(true);
+
+    setTimeout(() => {
+      setCopied(false);
+    }, 1000);
+  };
+
+  const onNew = async () => {
+    try {
+        setIsLoading(true)
+        const response = await axios.patch(`/api/servers/${server?.id}/invite-code`);
+
+        onOpen("invite", { server: response.data });
+      
+    } catch (error) {
+      console.log(error)
+    }finally{
+      setIsLoading(false)
+    }
+  }
 
   const isModalOpen = isOpen && type === "invite";
 
@@ -33,18 +65,21 @@ const InviteModal = () => {
           </Label>
           <div className="flex items-center mt-2 gap-x-2">
             <Input
-              // disabled={isLoading}
+              disabled={isLoading}
               className="bg-zinc-300/50 border-0 focus-visible:ring-0 text-black focus-visible:ring-offset-0"
-              value="invite link"
+              value={inviteUrl}
             />
-            <Button
-              //  disabled={isLoading} onClick={onCopy}
-              size="icon"
-            >
-              <Copy className="w-4 h-4" />
+            <Button disabled={isLoading} onClick={onCopy} size="icon">
+              {copied ? (
+                <Check className="w-4 h-4" />
+              ) : (
+                <Copy className="w-4 h-4" />
+              )}
             </Button>
           </div>
           <Button
+          disabled={isLoading}
+          onClick={onNew}
             variant="link"
             size="sm"
             className="text-xs text-zinc-500 mt-4"
