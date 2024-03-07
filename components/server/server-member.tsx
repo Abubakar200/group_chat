@@ -44,8 +44,9 @@ const ServerMember = ({ member, server }: ServerMemberProps) => {
           params?.memberId === member.id &&
             "text-primary dark:text-zinc-200 dark:group-hover:text-white"
         )}
-      >
+      > 
         {member.profile.name}
+        {/* {member.profile} */}
       </p>
       {icon}
     </button>
